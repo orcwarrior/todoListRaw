@@ -1,0 +1,32 @@
+@import '../bower_components/bootstrap/less/bootstrap.less';
+@import '../bower_components/font-awesome/less/font-awesome.less';
+
+@icon-font-path: '../bower_components/bootstrap/fonts/';
+@fa-font-path: '../bower_components/font-awesome/fonts';
+
+/**
+ * App-wide Styles
+ */
+
+.browserupgrade {
+  margin: 0.2em 0;
+  background: #ccc;
+  color: #000;
+  padding: 0.2em 0;
+}
+.container-center-both {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.big-checkbox {
+  width: 24px; height: 24px;
+}
+
+/* inject:less */
+@import 'main/main.less';
+@import 'todoTask/todoTask.less';
+@import '../components/footer/footer.less';
+@import '../components/modal/modal.less';
+@import '../components/todoTaskForm/todoTaskForm.less';
+/* endinject */

@@ -1,0 +1,8 @@
+<div class="container" ng-controller="MainController as todo">
+  <div class="row">
+    <todo-task ng-repeat="task in todo.userTasks" task="task" ></todo-task>
+  </div>
+  <div class="row">
+    <todo-task-form/>
+  </div>
+</div>

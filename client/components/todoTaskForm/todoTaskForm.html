@@ -1,0 +1,85 @@
+<div class="col-xs-12
+            col-sm-12
+            col-md-10 col-md-offset-1
+            col-lg-8 col-lg-offset-2">
+  <div class="row h3">
+    <div class="col-xs-12 ">
+      <h5>DODAJ ZADANIE</h5>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 col-sm-6 col-md-4 form-group">
+      <label class="control-label col-xs-4">
+        Nazwa
+      </label>
+      <div class="col-xs-8">
+        <input ng-model="form.name" class="form-control"/>
+      </div>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-4 form-group">
+      <label class="control-label col-xs-4 col-md-3">
+        Termin
+      </label>
+      <div class="input-group col-xs-8 col-md-4 input-group-padfix">
+        <input class="form-control form-task-timeinput" type="time" ng-model="form.date"/>
+        <input class="form-control" type="text" ng-hide="true"
+               ng-model="form.date" is-open="dpOpened" uib-datepicker-popup/>
+        <span class="input-group-btn">
+            <button type="button" class="btn btn-default"
+                    ng-click="dpOpened = true">
+              <span class="glyphicon glyphicon-calendar"></span></button>
+          </span>
+      </div>
+    </div>
+    <div class="col-xs-12 col-sm-6 col-md-4">
+      <label class="control-label col-xs-4 col-md-6">
+        Powiadomienie
+      </label>
+      <div class="col-xs-4">
+        <input type="checkbox" ng-model="form.notification"
+               class="big-checkbox"/>
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 form-group">
+      <label class="control-label col-xs-12">
+        Szczegółowy opis
+      </label>
+      <textarea class="form-control" rows="2"
+                ng-model="form.description"/>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-xs-12 form-group">
+      <label class="control-label col-xs-4 col-sm-2 col-md-1">
+        Tagi
+      </label>
+      <div class="col-xs-7 col-md-8">
+        <span ng-repeat="tag in form.tags">
+        <span class="label label-primary bigger-labels">#{{tag}}
+          <span class="glyphicon glyphicon-remove task-icon-small"
+                ng-click="removeTag($index)"></span>
+        </span>
+        </span>
+      </div>
+      <form class="input-group col-xs-12 col-md-3">
+        <input class="form-control" ng-model="newTag"
+               placeholder="Nowy tag...">
+        <span class="input-group-btn">
+          <button type="submit" class="btn btn-default"
+                  ng-click="addTag(newTag)">
+            <span class="glyphicon glyphicon-plus"/>
+          </button>
+        </span>
+      </form>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-3 pull-right">
+      <button type="button" class="btn-lg btn-primary" ng-click="saveTask()">
+        Dodaj zadanie
+      </button>
+    </div>
+  </div>
+</div>
