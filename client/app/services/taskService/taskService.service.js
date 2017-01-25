@@ -1,56 +1,78 @@
 'use strict';
 
-function taskService(taskStorageLocal, taskStorageDB, userService) {
+function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, userService, promiseFromValue, $q) {
+  var fetchedUser = userService.getUser();
 
-  var currentUser = userService.getUser();
+  function _getUserPromise(paramUserId) {
+    var user = (paramUserId) ? {_id: paramUserId} : fetchedUser;
+    return $q.when(user)
+  }
 
-  function _requestChainBuilder(method, arg) {
-    return taskStorageDB[method](arg)
+  function serviceActionChainBuilder(method, task) {
+    var promise = taskStorageDB[method](task)
       .then(function fulfilment(task) {
-        evtEmitter.emit('storageDB:success', arg);
+        if (method !== 'read')
+          evtEmitter.emitEvent('storageDB:refreshList', task);
+        evtEmitter.emitEvent('storageDB:success', {method: method, task: task._id});
         taskStorageLocal[method](task);
         return task;
       }, function rejection(err) {
-        evtEmitter.emit('storageDB:error', err);
-        return taskStorageLocal.unsync[method](arg);
+        if (method !== 'read')
+          evtEmitter.emitEvent('storageDB:refreshList', task);
+        evtEmitter.emitEvent('storageDB:error', err);
+        return taskUnsyncStorageLocal[method](task);
       });
+    return promiseFromValue(promise);
   }
 
   var evtEmitter = new EventEmitter();
   var service = _.extend(evtEmitter, {
     create: function (task) {
-      return _requestChainBuilder('create', task);
+      return serviceActionChainBuilder('create', task);
     },
     read: function (taskId) {
-      return _requestChainBuilder('read', taskId);
+      return serviceActionChainBuilder('read', taskId);
     },
     update: function (task) {
-      return _requestChainBuilder('update', task);
+      return serviceActionChainBuilder('update', task);
     },
     delete: function (task) {
-      return _requestChainBuilder('delete', task);
+      return serviceActionChainBuilder('delete', task);
     },
     list: function (userId, filters) {
       // Firstly read from localStorage:
-      userId = userId || currentUser;
-      var taskList = taskStorageLocal.list(userId, filters)
-        .then(function fulfilment(localList) {
-          taskList = taskStorageDB.list(userId, filters)
-            .then(function fulfilment(dbList) {
-              evtEmitter.emit('storageDB:success', dbList);
-              return dbList;
-            }, function rejection(err) {
-              evtEmitter.emit('storageDB:error', err);
-              return localList;
-            });
-          return localList;
-        });
-
-      return taskList;
+      console.log('taskService.list: called');
+      var localList, curUser,
+        promiseChain = _getUserPromise(userId)
+          .then(function (user) {
+            curUser = user;
+            return taskStorageLocal.list(user._id, filters);
+          })
+          .then(function (localStorageList) {
+            localList = localStorageList;
+            return taskStorageDB.list(curUser._id, filters);
+          })
+          .then(function fulfilment(dbList) {
+            var dbKeysById = _.keyBy(dbList, '_id');
+            evtEmitter.emitEvent('storageDB:success', {method: 'list'});
+            return _.extend(localList, dbKeysById); // database has higher prior
+          }, function rejection(err) {
+            evtEmitter.emitEvent('storageDB:error', err);
+            return localList; // return only local tasks
+          });
+      return promiseFromValue(promiseChain);
     },
-    listUnsynchronized: function (userId) {
-      userId = userId || currentUser;
-      return taskStorageLocal.unsync.list(userId, filters);
+    listUnsynchronized: function (userId, filters) {
+      return _getUserPromise(userId)
+        .then(function (user) {
+          return taskUnsyncStorageLocal.list(user._id, filters);
+        });
+    },
+    clearUnsynchronized: function () {
+      return _getUserPromise()
+        .then(function (user) {
+          taskUnsyncStorageLocal.clearUnsynchronizedEntries(user._id);
+        });
     }
   });
   return service;

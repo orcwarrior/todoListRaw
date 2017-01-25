@@ -15,6 +15,6 @@ angular.module('todoListApp', ['todoListApp.constants', 'ngCookies', 'ngResource
     localStorageServiceProvider
       .setPrefix('todoApp');
   })
-  .run(function () {
+  .run(function (taskSynchronizer) {
     moment.locale(navigator.language || navigator.userLanguage);
   });
