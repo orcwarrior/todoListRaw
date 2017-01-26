@@ -11,6 +11,10 @@ export default function(app) {
   // Insert routes below
   app.use('/api/tasks', require('./api/Task'));
   app.use('/api/users', require('./api/User'));
+  app.get('/api/ping', function (req, res) {
+    res.status(200).json({msg: 'pong'});
+  });
+
   // All undefined asset or api routes should return a 404
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')
    .get(errors[404]);
