@@ -2,9 +2,7 @@
 
 function taskUnsyncStorageLocalService(promiseFromValue, taskStorageLocal, localStorageService) {
   const UNSYNC_ACTION = { CREATE: 'create', UPDATE: 'update', DELETE: 'delete' }
-  function _getUserTasksKey() {
-    return 'user.tasks';
-  }
+  function _getUserTasksKey() { return 'user.tasks'; }
   function _getTasksObj() {
     return localStorageService.get(_getUserTasksKey()) || {};
   }
@@ -43,7 +41,6 @@ function taskUnsyncStorageLocalService(promiseFromValue, taskStorageLocal, local
     var clearedTasksObj = _.pickBy(tasksObj, function (task) {
       return !task._unsyncAction;
     });
-    console.log('UN-LS:clearUnsync:%d=>%d', _.keys(tasksObj).length, _.keys(clearedTasksObj).length);
     return taskStorageLocal.synchronizeList(clearedTasksObj);
   }
   return {
