@@ -1,61 +1,70 @@
 'use strict';
 
-function taskStorageLocalService($q, localStorageService) {
-  function _getTasksKey(task) { return 'user' + userId + 'tasks'; }
-  function _getTasksObjFromLocalStorage(userId) {
-    return localStorageService.get(_getTasksKey(userId)) || {};
+function taskStorageLocalService(localStorageService, promiseFromValue) {
+  var evtEmitter = new EventEmitter();
+
+  function _getUserTasksKey() {
+    return 'user.tasks';
   }
+
+  function _getTasksObj() {
+    return localStorageService.get(_getUserTasksKey()) || {};
+  }
+
   function _setTaskInTaskObjAtLocalStorage(task, tasksObj) {
+    var pre = _.keys(tasksObj).length;
     tasksObj[task._id || task._unsyncId] = task;
-    localStorageService.set(_getTasksKey(task), tasksObj);
-  }
-  function _promiseFromValue(val) {
-    var phPromise = $q.when(val);
-    phPromise.then(function (val) {
-      phPromise = _.extend(phPromise, val);
-      return val;
-    });
-    return phPromise;
+    evtEmitter.emit('taskStorage:listUpdate', tasksObj);
+    localStorageService.set(_getUserTasksKey(), tasksObj);
   }
 
   function createTask(task) {
-    var tasksObj = _getTasksObjFromLocalStorage(task._userId);
+    var tasksObj = _getTasksObj();
     _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return _promiseFromValue(task);
+    return promiseFromValue(task);
   }
+
   function readTask(taskId) {
-    // All stored users keys need to bee lookedup
-    var userKeys = localStorageService.keys();
-    _.each(userKeys, function (key) {
-      if (key && key[taskId]) return _promiseFromValue(key[taskId]);
-    });
+    var tasksObj = _getTasksObj();
+    if (tasksObj && tasksObj[taskId]) return promiseFromValue(tasksObj[taskId]);
   }
+
   function updateTask(task) {
-    var tasksObj = _getTasksObjFromLocalStorage(task._userId);
+    var tasksObj = _getTasksObj();
     _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return _promiseFromValue(task);
+    return promiseFromValue(task);
   }
+
   function deleteTask(task) {
-    var tasksObj = _getTasksObjFromLocalStorage(task._userId);
+    var tasksObj = _getTasksObj();
     delete tasksObj[task._id];
-    localStorageService.set(_getTasksKey(task), tasksObj);
+    console.log('LS:Delete:%d', _.keys(tasksObj).length);
+    localStorageService.set(_getUserTasksKey(), tasksObj);
     return task;
   }
-  function listTasks(userId, filters) {
-    var tasksObj = _getTasksObjFromLocalStorage(task._userId);
-    return _.chain(taskObj)
-      .filter(filters).toArray()
-      .thru(function (o) { return _promiseFromValue(o); })
-      .value();
+
+  function listTasks(filters) {
+    var tasksObj = _getTasksObj();
+    var tasksFiltered = _.pickBy(tasksObj, _.identity(filters));
+    return promiseFromValue(tasksFiltered);
   }
-  return {
+
+  function synchronizeList(outterSrcList) {
+    if (_.isArray(outterSrcList)) // map task._id as keys:
+      outterSrcList = _.keyBy(outterSrcList, '_id');
+    console.log('LS:Synchronize:%d', _.keys(outterSrcList).length);
+    evtEmitter.emit('taskStorage:listUpdate', outterSrcList);
+    localStorageService.set(_getUserTasksKey(), outterSrcList);
+  }
+
+  return _.extend(evtEmitter, {
     create: createTask,
     read: readTask,
     update: updateTask,
     delete: deleteTask,
     list: listTasks,
-  }
+    synchronizeList: synchronizeList
+  });
 }
-
 angular.module('todoListApp')
   .service('taskStorageLocal', taskStorageLocalService);

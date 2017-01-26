@@ -1,56 +1,91 @@
 'use strict';
 
-function taskService(taskStorageLocal, taskStorageDB, userService) {
-
-  var currentUser = userService.getUser();
-
-  function _requestChainBuilder(method, arg) {
-    return taskStorageDB[method](arg)
-      .then(function fulfilment(task) {
-        evtEmitter.emit('storageDB:success', arg);
-        taskStorageLocal[method](task);
-        return task;
+function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, userService, promiseFromValue, $q) {
+  var combinedUserTasks, dbUserTasks;
+  function _getUserPromise(paramUserId) {
+    var user = (paramUserId) ? {_id: paramUserId} : userService.getUser();
+    return $q.when(user)
+  }
+  // taskStorageLocal.on('taskStorage:listUpdate', function (newList) {
+  //   combinedUserTasks = newList; // List going to be overriden by further list() request
+  // })
+  function _pickTaskWithId(task1, task2) {
+    return (task1._id) ? task1 : task2;
+  }
+  function serviceActionChainBuilder(method, task) {
+    console.trace('taskService(%s:%s)',method, task);
+    var promise = taskStorageDB[method](task)
+      .then(function fulfilment(res) {
+        console.info('taskService(%s:%s):fulfilment',method, task);
+        var taskWithId = _pickTaskWithId(res, task);
+        // TODO: Przenieść re-listowanie na po-synchronizacji!!!
+        // if (method !== 'read')
+        //   evtEmitter.emitEvent('storageDB:refreshList', taskWithId);
+        evtEmitter.emit('taskService:successRequest',
+          { refreshList: method !== 'read' });
+        return taskStorageLocal[method](taskWithId);
       }, function rejection(err) {
-        evtEmitter.emit('storageDB:error', err);
-        return taskStorageLocal.unsync[method](arg);
+        console.info('taskService(%s:%s):rejection',method, task)
+        // if (method !== 'read')
+        //   evtEmitter.emitEvent('storageDB:refreshList', [task]);
+        evtEmitter.emit('taskService:errorRequest', err);
+        return taskUnsyncStorageLocal[method](task);
       });
+    return promiseFromValue(promise);
   }
 
   var evtEmitter = new EventEmitter();
   var service = _.extend(evtEmitter, {
     create: function (task) {
-      return _requestChainBuilder('create', task);
+      return serviceActionChainBuilder('create', task);
     },
     read: function (taskId) {
-      return _requestChainBuilder('read', taskId);
+      return serviceActionChainBuilder('read', taskId);
     },
     update: function (task) {
-      return _requestChainBuilder('update', task);
+      return serviceActionChainBuilder('update', task);
     },
     delete: function (task) {
-      return _requestChainBuilder('delete', task);
+      return serviceActionChainBuilder('delete', task);
     },
-    list: function (userId, filters) {
+    list: function (filters) {
       // Firstly read from localStorage:
-      userId = userId || currentUser;
-      var taskList = taskStorageLocal.list(userId, filters)
-        .then(function fulfilment(localList) {
-          taskList = taskStorageDB.list(userId, filters)
-            .then(function fulfilment(dbList) {
-              evtEmitter.emit('storageDB:success', dbList);
-              return dbList;
-            }, function rejection(err) {
-              evtEmitter.emit('storageDB:error', err);
-              return localList;
-            });
-          return localList;
-        });
-
-      return taskList;
+      console.log('taskService(list)');
+      var localList, curUser,
+        promiseChain = taskStorageLocal.list(filters)
+          .then(function (localStorageList) {
+            localList = localStorageList;
+            console.log('taskService(list):local:%d',_.keys(localList).length);
+            return _getUserPromise();
+          })
+          .then(function (user) {
+            curUser = user;
+            return taskStorageDB.list(curUser._id, filters);
+          })
+          .then(function fulfilment(dbList) {
+            console.log('taskService((list):db:fulfilment:%d',dbList.length);
+            dbUserTasks = _.keyBy(dbList, '_id');
+            combinedUserTasks = _.extend(localList, dbUserTasks); // database has higher prior
+            evtEmitter.emit('taskService:successRequest', combinedUserTasks);
+            evtEmitter.emit('taskService:tasksReloaded',combinedUserTasks);
+            return combinedUserTasks;
+          }, function rejection(err) {
+            console.log('taskService((list):db:error');
+            combinedUserTasks = localList;
+            evtEmitter.emit('taskService:tasksReloaded', combinedUserTasks);
+            evtEmitter.emit('taskService:errorRequest', err);
+            return combinedUserTasks; // return only local tasks
+          });
+      return promiseFromValue(promiseChain);
     },
-    listUnsynchronized: function (userId) {
-      userId = userId || currentUser;
-      return taskStorageLocal.unsync.list(userId, filters);
+    listUnsynchronized: function (userId, filters) {
+      return taskUnsyncStorageLocal.list(filters);
+    },
+    clearUnsynchronized: function () {
+      return $q.when(taskUnsyncStorageLocal.clearUnsynchronizedEntries());
+    },
+    getCachedTasks: function () {
+      return combinedUserTasks;
     }
   });
   return service;
