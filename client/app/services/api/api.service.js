@@ -12,9 +12,18 @@ function apiService($resource) {
     { update: {method: 'PUT'}});
     return taskResource;
   }
+  function composePingResource() {
+    var pingResource = $resource('/api/ping');
+    delete pingResource.prototype.$query; // cannot list user.
+    delete pingResource.prototype.$save; // cannot list user.
+    delete pingResource.prototype.$delete; // cannot list user.
+    delete pingResource.prototype.$remove; // cannot list user.
+    return pingResource;
+  }
   return {
     task: composeTasksResource(),
-    user: composeUsersResource()
+    user: composeUsersResource(),
+    ping: composePingResource()
   }
 }
 
