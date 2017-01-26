@@ -28,6 +28,7 @@ module.exports = function(config) {
       'client/bower_components/angular-ui-router/release/angular-ui-router.js',
       'client/bower_components/moment/min/moment-with-locales.js',
       'client/bower_components/angular-local-storage/dist/angular-local-storage.js',
+      'client/bower_components/eventEmitter/EventEmitter.js',
       'client/bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'client/app/app.js',
