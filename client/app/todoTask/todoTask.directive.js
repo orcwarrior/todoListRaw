@@ -26,7 +26,6 @@ angular.module('todoListApp')
         scope.removeTask = function () {
           if (window.confirm("Czy na pewno chcesz usunąć zadanie: "+scope.task.name+"?")) {
             taskService.delete(scope.task);
-            alert("Zadanie usunięte!");
           }
         }
         function updateTask() {
