@@ -15,8 +15,8 @@ function userServiceService(localStorageService, api, $q) {
       return localStorageUser;
     }
     else
-      return api.user.save({name: 'u' + moment().format()},
-        function (createdUser) {
+      return api.user.save({name: 'u' + moment().format()}).$promise
+        .then(function (createdUser) {
           user = createdUser;
           localStorageService.set('user', createdUser);
           return createdUser;
