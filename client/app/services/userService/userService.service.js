@@ -6,17 +6,17 @@ function userServiceService(localStorageService, api, $q) {
     if (user) return user;
     var localStorageUser = localStorageService.get('user');
     if (localStorageUser) {
-      user = api.user.get(localStorageUser._id)
-        .then(function (dbUser) {
+      user = api.user.get({userId: localStorageUser._id},
+        function (dbUser) {
           user = dbUser;
           localStorageService.set('user', dbUser);
-          return createdUser;
+          return dbUser;
         });
       return localStorageUser;
     }
     else
-      return api.user.save({name: 'u' + moment().format()}).$promise
-        .then(function (createdUser) {
+      return api.user.save({name: 'u' + moment().format()},
+        function (createdUser) {
           user = createdUser;
           localStorageService.set('user', createdUser);
           return createdUser;
