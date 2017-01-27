@@ -5,7 +5,6 @@ function mainController(taskService, taskSynchronizer) {
   vm.synchronizer = taskSynchronizer;
   vm.currentTimeBetween = currentTimeBetween;
 
-  taskService.list();
   taskService.on('taskService:tasksReloaded', function (tasksList) {
     // indexes after angular sort arent mutated so sort will happen here:
     vm.userTasks = _.sortBy(tasksList, 'date');
