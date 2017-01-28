@@ -1,35 +1,42 @@
 'use strict';
 
-function userServiceService(localStorageService, api, $q) {
-  var user;
+function userServiceService(localStorageService, api, resourcePromise) {
+  var fetchedUser;
+
+  function fetchDBUser(localStorageUser) {
+    return api.user.get({userId: localStorageUser._id},
+      function (dbUser) {
+        fetchedUser = dbUser;
+        localStorageService.set('user', fetchedUser);
+        return fetchedUser;
+      });
+  }
+  function createDBUser() {
+    return api.user.save({name: 'u' + moment().format()},
+      function (createdUser) {
+        fetchedUser = createdUser;
+        localStorageService.set('user', createdUser);
+        return createdUser;
+      })
+  }
+  function getLocalStorageUser() {
+    return localStorageService.get('user');
+  }
+
   function getUser() {
-    if (user) return user;
-    var localStorageUser = localStorageService.get('user');
+    if (fetchedUser) return fetchedUser;
+    var localStorageUser = getLocalStorageUser();
     if (localStorageUser) {
-      user = api.user.get({userId: localStorageUser._id},
-        function (dbUser) {
-          user = dbUser;
-          localStorageService.set('user', dbUser);
-          return dbUser;
-        });
+      fetchedUser = fetchDBUser();
       return localStorageUser;
     }
     else
-      return api.user.save({name: 'u' + moment().format()}).$promise
-        .then(function (createdUser) {
-          user = createdUser;
-          localStorageService.set('user', createdUser);
-          return createdUser;
-        });
+      return createDBUser();
   }
+
   return {
     getUser: function () {
-      var placeholderPromise = $q.when(getUser())
-        .then(function (user) {
-          placeholderPromise = _.extend(placeholderPromise, user);
-          return user;
-        });
-      return placeholderPromise;
+      return resourcePromise(getUser());
     }
   };
 }
