@@ -1,6 +1,6 @@
 'use strict';
 
-function taskUnsyncStorageLocalService(promiseFromValue, taskStorageLocal, localStorageService) {
+function taskUnsyncStorageLocalService(resourcePromise, taskStorageLocal, localStorageService) {
   const UNSYNC_ACTION = { CREATE: 'create', UPDATE: 'update', DELETE: 'delete' }
   function _getUserTasksKey() { return 'user.tasks'; }
   function _getTasksObj() {
@@ -32,7 +32,7 @@ function taskUnsyncStorageLocalService(promiseFromValue, taskStorageLocal, local
   }
   function listUnsynchronizedTasks(filters) {
     var tasksObj = _getTasksObj();
-    return promiseFromValue(_.chain(tasksObj)
+    return resourcePromise(_.chain(tasksObj)
       .pickBy(function (v) {return v._unsyncAction;})
       .pickBy(_.identity(filters)).value());
   }

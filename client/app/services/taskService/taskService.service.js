@@ -1,6 +1,6 @@
 'use strict';
 
-function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, userService, promiseFromValue, $q) {
+function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, userService, resourcePromise, $q) {
   var combinedUserTasks, dbUserTasks;
 
   function _pickTaskWithId(task1, task2) {
@@ -27,7 +27,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
           evtEmitter.emit('taskService:errorRequest', _genTaskConfig(method));
       })
 
-    return promiseFromValue(promise);
+    return resourcePromise(promise);
   }
 
   var evtEmitter = new EventEmitter();
@@ -67,7 +67,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
             evtEmitter.emit('taskService:errorRequest', err);
             return combinedUserTasks;
           });
-      return promiseFromValue(promiseChain);
+      return resourcePromise(promiseChain);
     },
     listUnsynchronized: function (filters) {
       return taskUnsyncStorageLocal.list(filters);

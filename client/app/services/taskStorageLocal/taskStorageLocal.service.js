@@ -1,6 +1,6 @@
 'use strict';
 
-function taskStorageLocalService(localStorageService, promiseFromValue) {
+function taskStorageLocalService(localStorageService, resourcePromise) {
   function _getUserTasksKey() { return 'user.tasks'; }
 
   function _getTasksObj() {
@@ -16,18 +16,18 @@ function taskStorageLocalService(localStorageService, promiseFromValue) {
   function createTask(task) {
     var tasksObj = _getTasksObj();
     _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return promiseFromValue(task);
+    return resourcePromise(task);
   }
 
   function readTask(taskId) {
     var tasksObj = _getTasksObj();
-    if (tasksObj && tasksObj[taskId]) return promiseFromValue(tasksObj[taskId]);
+    if (tasksObj && tasksObj[taskId]) return resourcePromise(tasksObj[taskId]);
   }
 
   function updateTask(task) {
     var tasksObj = _getTasksObj();
     _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return promiseFromValue(task);
+    return resourcePromise(task);
   }
 
   function deleteTask(task) {
@@ -40,7 +40,7 @@ function taskStorageLocalService(localStorageService, promiseFromValue) {
   function listTasks(filters) {
     var tasksObj = _getTasksObj();
     var tasksFiltered = _.pickBy(tasksObj, _.identity(filters));
-    return promiseFromValue(tasksFiltered);
+    return resourcePromise(tasksFiltered);
   }
 
   function synchronizeList(outterSrcList) {

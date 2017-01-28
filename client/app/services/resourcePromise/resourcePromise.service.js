@@ -1,7 +1,7 @@
 'use strict';
 
-function promiseFromValueService($q) {
-  return function promiseFromValue(val) {
+function resourcePromiseService($q) {
+  return function resourcePromise(val) {
     var phPromise = $q.when(val);
     phPromise.then(function (val) {
       phPromise = _.extend(phPromise, val);
@@ -12,4 +12,4 @@ function promiseFromValueService($q) {
 }
 
 angular.module('todoListApp')
-  .service('promiseFromValue', promiseFromValueService);
+  .service('resourcePromise', resourcePromiseService);
