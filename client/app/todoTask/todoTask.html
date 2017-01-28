@@ -3,14 +3,14 @@
             col-md-8 col-md-offset-2
             col-lg-6 col-lg-offset-3"
     ng-class="{'unsync' : isUnsyncTask()}">
-  <div class="col-xs-2">
+  <div class="col-xs-2 col-sm-1 wrapper-task-done-btn">
     <button type="button" class="btn btn-default" ng-click="toggleTaskDone()">
     <span class="task-done-icon glyphicon"
           ng-class="{'glyphicon-ok' : task.completed,
           'glyphicon-remove': !task.completed}"/>
     </button>
   </div>
-  <div class="col-xs-5">
+  <div class="col-xs-6 col-sm-7">
     <div class="row">
       <div class="col-xs-12"><h4>{{task.name}}</h4></div>
       <div class="col-xs-12">
@@ -23,7 +23,7 @@
   <div class="col-xs-3">
     {{taskCallendarDay(task.date)}}
   </div>
-  <div class="col-xs-1 text-right">
+  <div class="col-xs-1 text-center">
     <div class="row">
     <span class="glyphicon task-icon-small"
           ng-click="toggleNotification()"

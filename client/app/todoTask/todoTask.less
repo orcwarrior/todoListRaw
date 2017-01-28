@@ -3,7 +3,19 @@
 }
 .task-icon-small {
   cursor: hand;
+  font-size: 1em;
+  padding: 6px 3px;
 }
 .unsync {
   opacity: 0.7;
+}
+.wrapper-task-done-btn {
+  float: right; text-align: right;
+  padding: 0 5px;
+}
+@media only screen
+and (min-device-width: @screen-sm-min) {
+  .wrapper-task-done-btn {
+    position: relative; right: 8px;
+  }
 }
