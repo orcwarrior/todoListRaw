@@ -7,7 +7,7 @@
 /**
  * App-wide Styles
  */
-
+@brand-primary: #344777;
 .browserupgrade {
   margin: 0.2em 0;
   background: #ccc;
@@ -22,7 +22,31 @@
 .big-checkbox {
   width: 24px; height: 24px;
 }
+.row-tasks-no-padding  > todo-task > [class*="col-"] {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.padding-0 {
+  padding: 0;
+}
 
+@navbar-text: #eee;
+@navbar-content-marigin: 20px;
+body { padding-top: @navbar-height + @navbar-content-marigin;  }
+.navbar-custom {
+   background-color: @brand-primary;
+   border-radius:0;
+ }
+.navbar-custom .navbar-nav > li > a, .navbar-custom .navbar-brand {
+  color: @navbar-text;
+}
+.navbar-custom .navbar-toggle > .icon-bar {
+  background-color: @navbar-text;
+}
+.navbar-custom .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
+  color: @navbar-text;
+  background-color:transparent;
+}
 /* inject:less */
 @import 'main/main.less';
 @import 'todoTask/todoTask.less';
