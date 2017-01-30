@@ -1,6 +1,6 @@
 'use strict';
 
-function userServiceService(localStorageService, api, resourcePromise) {
+function userServiceService(localStorageService, api, $q) {
   var fetchedUser;
 
   function fetchDBUser(localStorageUser) {
@@ -27,7 +27,7 @@ function userServiceService(localStorageService, api, resourcePromise) {
     if (fetchedUser) return fetchedUser;
     var localStorageUser = getLocalStorageUser();
     if (localStorageUser) {
-      fetchedUser = fetchDBUser();
+      fetchedUser = fetchDBUser(localStorageUser);
       return localStorageUser;
     }
     else
@@ -36,7 +36,7 @@ function userServiceService(localStorageService, api, resourcePromise) {
 
   return {
     getUser: function () {
-      return resourcePromise(getUser());
+      return $q.when(getUser());
     }
   };
 }
