@@ -7,12 +7,10 @@
     </div>
   </div>
 
-    <div class="row row-tasks-no-padding task-wrapper" ng-repeat="task in todo.userTasks">
-      <todo-task task="task"></todo-task>
-      <div class="row">
-      <hr id='currentTime' class="col-xs-12 col-md-offset-2 col-md-8"
+    <div ng-repeat="task in todo.userTasks">
+      <todo-task task="task" class="row row-tasks-no-padding"></todo-task>
+      <hr id='currentTime' class="col-xs-12 col-md-offset-2 col-md-8 padding-0"
           ng-if="todo.currentTimeBetween(task, todo.userTasks[$index+1])" />
-      </div>
     </div>
   <div class="row">
     <todo-task-form/>
