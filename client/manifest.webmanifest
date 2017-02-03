@@ -7,23 +7,23 @@
   "background_color": "#344777",
   "theme_color": "#344777",
   "icons": [{
-    "src": "/assets/icons/app-logo-48.png",
+    "src": "/assets/images/icons/app-logo-48.png",
     "sizes": "48x48",
     "type": "image/png"
   }, {
-    "src": "/assets/icons/app-logo-72.png",
+    "src": "/assets/images/icons/app-logo-72.png",
     "sizes": "72x72",
     "type": "image/png"
   }, {
-    "src": "/assets/icons/app-logo-96.png",
+    "src": "/assets/images/icons/app-logo-96.png",
     "sizes": "96x96",
     "type": "image/png"
   }, {
-    "src": "/assets/icons/app-logo-144.png",
+    "src": "/assets/images/icons/app-logo-144.png",
     "sizes": "144x144",
     "type": "image/png"
   }, {
-    "src": "/assets/icons/app-logo-192.png",
+    "src": "/assets/images/icons/app-logo-192.png",
     "sizes": "192x192",
     "type": "image/png"
   }]
