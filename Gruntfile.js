@@ -250,7 +250,12 @@ module.exports = function(grunt) {
       dist: {
         src: [
           '<%= yeoman.dist %>/<%= yeoman.client %>/!(bower_components){,*/}*.{js,css}',
-          '<%= yeoman.dist %>/<%= yeoman.client %>/assets/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}'
+          '<%= yeoman.dist %>/<%= yeoman.client %>/assets/images/{,*/}*.{png,jpg,jpeg,gif,webp,svg}',
+          // Since Servce worker uses non-typical kinds of file import/load don't rename them!
+          // Icons used by manifest will not work too, so ignore them too
+          '!<%= yeoman.dist %>/<%= yeoman.client %>/sw.js',
+          '!<%= yeoman.dist %>/<%= yeoman.client %>/serviceWorker/*',
+          '!<%= yeoman.dist %>/<%= yeoman.client %>/assets/images/icons/app-logo*',
         ]
       }
     },
@@ -380,7 +385,9 @@ module.exports = function(grunt) {
             'bower_components/**/*',
             'assets/images/{,*/}*.{webp}',
             'assets/fonts/**/*',
-            'index.html'
+            'index.html',
+            'sw.js',
+            'serviceWorker/*'
           ]
         }, {
           expand: true,
