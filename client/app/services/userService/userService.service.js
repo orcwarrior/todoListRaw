@@ -9,7 +9,7 @@ function userServiceService(localStorageService, api, $q) {
         fetchedUser = dbUser;
         localStorageService.set('user', fetchedUser);
         return fetchedUser;
-      });
+      }).$promise;
   }
   function createDBUser() {
     return api.user.save({name: 'u' + moment().format()},
@@ -17,7 +17,7 @@ function userServiceService(localStorageService, api, $q) {
         fetchedUser = createdUser;
         localStorageService.set('user', createdUser);
         return createdUser;
-      })
+      }).$promise;
   }
   function getLocalStorageUser() {
     return localStorageService.get('user');
