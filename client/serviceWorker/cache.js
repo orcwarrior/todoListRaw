@@ -13,10 +13,11 @@ var precacheFiles = [
 ];
 
 
-cacheEvts.activate = function () {
+cacheEvts.activate = function (event) {
   console.log("SW: Activated!");
-  preCache();
-  clients.claim();
+  event.waitUntil(preCache().then(function() {
+    return self.clients.claim();
+  });
 };
 
 function preCache() {
@@ -27,12 +28,18 @@ function preCache() {
 
 cacheEvts.fetch = function (event) {
   const url = new URL(event.request.url);
+  const filename = event.request.url.substring(event.request.url.lastIndexOf('/')+1);
   if (isCacheableUrl(url)) {
-    event.respondWith(getFromCache(event.request));
-    event.waitUntil(fetchAndCache(event.request)); // Found in cache, but still update by fetch.
+    event.respondWith(getFromCache(event.request)
+      .catch(function (err) {
+        console.warn("[%s]1. Getting from cache rejected: " + err, filename);
+        return fetchAndCache(event.request);
+      }));
+    return;
   }
 }
 function getFromCache(request) {
+  const filename = request.url.substring(request.url.lastIndexOf('/')+1);
   return caches.open(CACHE_NAME).then(function (cache) {
     return cache.match(request);
   }).then(function (matching) {
@@ -43,15 +50,22 @@ function getFromCache(request) {
 }
 function fetchAndCache(request) {
   var fetchedResponse, copiedResponse;
+  const filename = request.url.substring(request.url.lastIndexOf('/')+1);
   return fetch(request).then(function (response) {
     fetchedResponse = response;
+    copiedResponse = response.clone();
+    console.info("[%s]2. Fetched response from server", filename);
     return caches.open(CACHE_NAME);
-  }, function (err) {
-    return Promise.reject("Fetch error: "+err);
   }).then(function (cache) {
-    console.log("setting up in cache...");
+    console.log("[%s]3. setting up in cache...", filename);
     return cache.put(request, fetchedResponse);
-  })
+  }).then(function () {
+    console.log("[%s]4. Returning fetched response", filename);
+    return copiedResponse;
+  }).catch(function (err) {
+    console.error("[%s]5. Fetch error: " + err, filename);
+    return Promise.reject("Fetch error: " + err);
+  });
 }
 
 var cacheConfig = {
