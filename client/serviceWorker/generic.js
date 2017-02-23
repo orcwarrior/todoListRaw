@@ -5,7 +5,7 @@
 var genericEvts = {};
 genericEvts.install = function (event) {
   console.log("SW: Installing...");
-  //event.waitUntil()
+  event.waitUntil(self.skipWaiting());
 }
 
 events.generic = genericEvts;
