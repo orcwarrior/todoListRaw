@@ -12,7 +12,6 @@ var precacheFiles = [
   '/serviceWorker/cache.js',
 ];
 
-
 cacheEvts.activate = function (event) {
   console.log("SW: Activated!");
   preCache();
@@ -24,6 +23,7 @@ function preCache() {
     return cache.addAll(precacheFiles);
   });
 }
+
 Promise.resolveFullfiled = function (promise) {
   return new Promise(function (resolve) {
     promise.then(function (fulfilment) {
@@ -35,6 +35,8 @@ Promise.resolveFullfiled = function (promise) {
   }, function (reject) {
   });
 };
+
+// Dynamic caching:
 cacheEvts.fetch = function (event) {
   const url = new URL(event.request.url);
   const filename = event.request.url.substring(event.request.url.lastIndexOf('/') + 1);
@@ -89,6 +91,7 @@ function fetchAndCache(request) {
     });
 }
 
+// Dynamic caching pattern matcher:
 var cacheConfig = {
   allow: ['\.*.html', '\.*.css', '\.*.js', '\.*.woff', '\.*.ttf', '\/assets\/.*'],
   deny: ['^\/api\/.*',]
