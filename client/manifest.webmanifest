@@ -1,6 +1,6 @@
 {
   "name": "ToDo List Application",
-  "short_name": "ToDo List Application",
+  "short_name": "ToDo List App",
   "description": "Simple and responsive Task Manager application.",
   "start_url": ".",
   "display": "standalone",
