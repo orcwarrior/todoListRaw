@@ -14,47 +14,43 @@ var precacheFiles = [
 
 cacheEvts.activate = function (event) {
   console.log("SW: Activated!");
-  preCache();
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(cache_preCache().then(function () {
+    return self.clients.claim();
+  }));
 };
-
-function preCache() {
+function cache_preCache() {
   return caches.open(CACHE_NAME).then(function (cache) {
     return cache.addAll(precacheFiles);
   });
 }
 
-Promise.resolveFullfiled = function (promise) {
+// Dynamic cache
+Promise.resolveFulfilled = function (promise) {
   return new Promise(function (resolve) {
     promise.then(function (fulfilment) {
-      if (fulfilment) {
-        console.info("Truely fulfiled: " + fulfilment);
+      if (fulfilment) { // DK: Bugfix where fetch error was resolved anyways.
         resolve(fulfilment);
       }
     });
-  }, function (reject) {
-  });
+  }, function (reject) { });
 };
 
-// Dynamic caching:
 cacheEvts.fetch = function (event) {
   const url = new URL(event.request.url);
-  const filename = event.request.url.substring(event.request.url.lastIndexOf('/') + 1);
-  if (isCacheableUrl(url)) {
-    var cached = Promise.resolveFullfiled(getFromCache(event.request));
-    var fetched = Promise.resolveFullfiled(fetchAndCache(event.request));
+  const filename = cache_getFilenameFromRequest(event.request);
+  if (cache_isCacheableUrl(url)) {
+    var cached = Promise.resolveFulfilled(cache_getFromCache(event.request));
+    var fetched = Promise.resolveFulfilled(cache_fetchAndCache(event.request));
     var both = Promise.all([fetched, cached]);
-    var any = Promise.race([fetched, cached]).then(function (raced) {
-      console.info("[%s] Promise race resolved!: " + raced, filename);
-      return Promise.resolve(raced);
-    });
+    var any = Promise.race([fetched, cached]);
 
     event.waitUntil(both);
     event.respondWith(any);
   }
-}
-function getFromCache(request) {
-  const filename = request.url.substring(request.url.lastIndexOf('/') + 1);
+};
+
+function cache_getFromCache(request) {
+  const filename = cache_getFilenameFromRequest(request);
   return caches.open(CACHE_NAME).then(function (cache) {
     return cache.match(request);
   }).then(function (matching) {
@@ -64,6 +60,9 @@ function getFromCache(request) {
     } // Elsewhere, don't resolve so Race will wait for fetch.
   })
 }
+function cache_getFilenameFromRequest(request) {
+  return request.url.substring(request.url.lastIndexOf('/') + 1);
+}
 
 function handleFetchErrors(response) {
   if (!response.ok) {
@@ -71,9 +70,9 @@ function handleFetchErrors(response) {
   }
   return response;
 }
-function fetchAndCache(request) {
+function cache_fetchAndCache(request) {
   var fetchedResponse;
-  const filename = request.url.substring(request.url.lastIndexOf('/') + 1);
+  const filename = cache_getFilenameFromRequest(request);
   return fetch(request)
     .then(handleFetchErrors)
     .then(function (response) {
@@ -92,24 +91,23 @@ function fetchAndCache(request) {
 }
 
 // Dynamic caching pattern matcher:
-var cacheConfig = {
+var cache_matcherConfig = {
   allow: ['\.*.html', '\.*.css', '\.*.js', '\.*.woff', '\.*.ttf', '\/assets\/.*'],
   deny: ['^\/api\/.*',]
 }
 
-function buildPathMatcher(path) {
-  return function (regexStr) {
+function cache_buildPathMatcher(path) {
+  return function regexTester(regexStr) {
     var regex = new RegExp(regexStr);
     return regex.test(path);
   }
 }
 
-function isCacheableUrl(url) {
-  if (url.origin === location.origin) {
-    return (precacheFiles.indexOf(url.pathname) !== -1
-    || (cacheConfig.allow.some(buildPathMatcher(url.pathname))
-    && !cacheConfig.deny.some(buildPathMatcher(url.pathname))));
-  } else return false;
-}
+function cache_isCacheableUrl(url) {
+  if (url.origin !== location.origin) return false;
 
+  var path = url.pathname;
+  return (cache_matcherConfig.allow.some(cache_buildPathMatcher(path))
+  && !cache_matcherConfig.deny.some(cache_buildPathMatcher(path)));
+}
 events.cache = cacheEvts;
