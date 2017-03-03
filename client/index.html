@@ -8,10 +8,29 @@
     <meta http-equiv="x-ua-compatible" content="ie=edge">
     <link rel="manifest" href="/manifest.webmanifest">
     <base href="/">
-    <title></title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
-    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <title>Todo List Application</title>
+    <!-- favicon in desktop browser -->
+    <link rel="icon" type='image/png' href="/assets/images/icons/app-logo-dark-144.png">
+
+    <!-- Adding app to homescreen on various handheld devices -->
+    <!-- iOS-->
+    <meta name="apple-mobile-web-app-title" content="ToDo List App">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="#344777">
+    <!-- For iPad with @2× display running iOS ≤ 6: -->
+    <link rel="apple-touch-icon-precomposed" sizes="144x144"
+          href="/assets/images/icons/app-logo-144.png">
+    <!-- For the iPad mini and the first- and second-generation iPad (@1× display) on iOS ≤ 6: -->
+    <link rel="apple-touch-icon-precomposed" sizes="72x72"
+          href="/assets/images/icons/app-logo-72.png">
+    <!-- For non-Retina iPhone, iPod Touch, and Android 2.1+ devices: -->
+    <link rel="apple-touch-icon-precomposed" href="/assets/images/icons/app-logo-48.png">
+
+    <!-- Windows Phone -->
+    <meta name="msapplication-TileImage" content="/assets/images/icons/app-logo-144.png">
+    <meta name="msapplication-TileColor" content="#344777">
     <!-- build:css(client) app/vendor.css -->
       <!-- bower:css -->
       <!-- endbower -->
@@ -22,11 +41,13 @@
       <!-- endinjector -->
     <!-- endbuild -->
     <script>
-      if (navigator.serviceWorker) {
-      navigator.serviceWorker.register('./sw.js')
-        .then(function (reg) { console.log('SW:Registred: ', reg); })
-        .catch(function (err) { console.log('SW:RegisterError: ', err); })
-    }
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js')
+          .then(function (reg) { console.log('SW:Registred: ', reg); })
+          .catch(function (err) { console.log('SW:RegisterError: ', err); })
+      } else {
+          console.warn("No service worker supported by browser!");
+      }
     </script>
   </head>
   <body ng-app="todoListApp">
@@ -67,21 +88,24 @@
       <script src="bower_components/moment/min/moment-with-locales.js"></script>
       <script src="bower_components/angular-local-storage/dist/angular-local-storage.js"></script>
       <script src="bower_components/eventEmitter/EventEmitter.js"></script>
+      <script src="bower_components/localforage/dist/localforage.js"></script>
       <!-- endbower -->
     <!-- endbuild -->
     <!-- build:js(.tmp) app/app.js -->
       <script src="app/app.js"></script>
       <!-- injector:js -->
       <script src="components/util/util.module.js"></script>
-      <script src="app/services/taskUnsyncStorageLocal/taskUnsyncStorageLocal.service.js"></script>
+      <script src="app/services/taskSynchronizer/taskSynchronizer.service.js"></script>
       <script src="app/main/main.js"></script>
       <script src="app/services/api/api.service.js"></script>
+      <script src="app/services/localForage/localForage.service.js"></script>
+      <script src="app/services/notificationManager/notificationManager.service.js"></script>
       <script src="app/services/resourcePromise/resourcePromise.service.js"></script>
       <script src="app/services/taskService/taskService.service.js"></script>
       <script src="app/services/taskStorageDB/taskStorageDB.service.js"></script>
       <script src="app/services/taskStorageLocal/taskStorageLocal.service.js"></script>
-      <script src="app/services/taskSynchronizer/taskSynchronizer.service.js"></script>
       <script src="app/main/main.controller.js"></script>
+      <script src="app/services/taskUnsyncStorageLocal/taskUnsyncStorageLocal.service.js"></script>
       <script src="app/services/userService/userService.service.js"></script>
       <script src="app/todoTask/todoTask.directive.js"></script>
       <script src="components/footer/footer.directive.js"></script>
