@@ -263,7 +263,6 @@ module.exports = function(grunt) {
           // Since Servce worker uses non-typical kinds of file import/load don't rename them!
           // Icons used by manifest will not work too, so ignore them too
           '!<%= yeoman.dist %>/<%= yeoman.client %>/manifest.webmanifest',
-          '!<%= yeoman.dist %>/<%= yeoman.client %>/assets/images/icons/app-logo*'
           '!<%= yeoman.dist %>/<%= yeoman.client %>/sw.js',
           '!<%= yeoman.dist %>/<%= yeoman.client %>/serviceWorker/*',
           '!<%= yeoman.dist %>/<%= yeoman.client %>/assets/images/icons/app-logo*',
