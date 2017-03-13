@@ -55,7 +55,7 @@ function cache_getFromCache(request) {
     return cache.match(request);
   }).then(function (matching) {
     if (matching) {
-      console.info("[%s]1. Cache matching: " + matching, filename);
+      // console.info("[%s]1. Cache matching: " + matching, filename);
       return matching;
     } // Elsewhere, don't resolve so Race will wait for fetch.
   })
@@ -77,13 +77,13 @@ function cache_fetchAndCache(request) {
     .then(handleFetchErrors)
     .then(function (response) {
       fetchedResponse = response;
-      console.log("[%s]2. Fetched response from server", filename);
+      // console.log("[%s]2. Fetched response from server", filename);
       return caches.open(CACHE_NAME);
     }).then(function (cache) {
-      console.log("[%s]3. setting up in cache...", filename);
+      // console.log("[%s]3. setting up in cache...", filename);
       return cache.put(request, fetchedResponse.clone());
     }).then(function () {
-      console.info("[%s]4. Returning fetched response", filename);
+      // console.info("[%s]4. Returning fetched response", filename);
       return fetchedResponse;
     }).catch(function (err) {
       console.warn("[%s] Fetch error: " + err, filename);
