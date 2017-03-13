@@ -11,6 +11,9 @@ export default function(app) {
   // Insert routes below
   app.use('/api/tasks', require('./api/Task'));
   app.use('/api/users', require('./api/User'));
+
+  app.use('/api/notifications', require('./api/notifications'));
+
   app.get('/api/ping', function (req, res) {
     res.status(200).json({msg: 'pong'});
   });
