@@ -1,19 +1,19 @@
 'use strict';
 
 angular.module('todoListApp', ['todoListApp.constants', 'ngCookies', 'ngResource', 'ngSanitize',
-    'ui.router', 'ui.bootstrap', 'LocalStorageModule'
+    'ui.router', 'ui.bootstrap', 'LocalForageModule'
   ])
-  .config(function (localStorageServiceProvider) {
-    localStorageServiceProvider.setPrefix('todoApp');
+  .config(function ($localForageProvider) {
+    $localForageProvider.config({
+      driver      : 'localStorageWrapper',
+      name        : 'todo_list',
+      storeName   : 'keyvaluepairs',
+    });
   })
   .config(function($urlRouterProvider, $locationProvider) {
     $urlRouterProvider.otherwise('/');
 
     $locationProvider.html5Mode(true);
-  })
-  .config(function (localStorageServiceProvider) {
-    localStorageServiceProvider
-      .setPrefix('todoApp');
   })
   .run(function () {
     moment.locale(navigator.language || navigator.userLanguage);
