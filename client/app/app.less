@@ -29,34 +29,11 @@
 .padding-0 {
   padding: 0;
 }
-
-@navbar-text: #eee;
-@navbar-content-marigin: 20px;
-body { padding-top: @navbar-height + @navbar-content-marigin;  }
-.navbar-custom {
-   background-color: @brand-primary;
-   border-radius:0;
- }
-.navbar-brand-logo {
-  display: inline-block;
-  height: 28px;
-  width: 28px;
-  color: #fff;
-}
-.navbar-custom .navbar-nav > li > a, .navbar-custom .navbar-brand {
-  color: @navbar-text;
-}
-.navbar-custom .navbar-toggle > .icon-bar {
-  background-color: @navbar-text;
-}
-.navbar-custom .navbar-nav > .active > a, .navbar-nav > .active > a:hover, .navbar-nav > .active > a:focus {
-  color: @navbar-text;
-  background-color:transparent;
-}
 /* inject:less */
 @import 'main/main.less';
 @import 'todoTask/todoTask.less';
 @import '../components/footer/footer.less';
 @import '../components/modal/modal.less';
+@import '../components/navbar/navbar.less';
 @import '../components/todoTaskForm/todoTaskForm.less';
 /* endinject */
