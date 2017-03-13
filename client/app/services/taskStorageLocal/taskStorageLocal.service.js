@@ -1,52 +1,60 @@
 'use strict';
 
-function taskStorageLocalService(localStorageService, resourcePromise) {
+function taskStorageLocalService($localForage, resourcePromise) {
   function _getUserTasksKey() { return 'user.tasks'; }
 
   function _getTasksObj() {
-    return localStorageService.get(_getUserTasksKey()) || {};
+    return $localForage.getItem(_getUserTasksKey())
+        .catch(function (err) {
+        console.log("Local forge err: "+err);
+        return {};
+      });
   }
 
   function _setTaskInTaskObjAtLocalStorage(task, tasksObj) {
     var pre = _.keys(tasksObj).length;
     tasksObj[task._id || task._unsyncId] = task;
-    localStorageService.set(_getUserTasksKey(), tasksObj);
+    return $localForage.setItem(_getUserTasksKey(), tasksObj);
   }
 
   function createTask(task) {
     var tasksObj = _getTasksObj();
-    _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return resourcePromise(task);
+    return _setTaskInTaskObjAtLocalStorage(task, tasksObj);
+    // return resourcePromise(task);
   }
 
   function readTask(taskId) {
-    var tasksObj = _getTasksObj();
-    if (tasksObj && tasksObj[taskId]) return resourcePromise(tasksObj[taskId]);
+    return _getTasksObj().then(function (tasksObj) {
+        if (tasksObj && tasksObj[taskId])
+          return resourcePromise(tasksObj[taskId]);
+      })
   }
 
   function updateTask(task) {
     var tasksObj = _getTasksObj();
-    _setTaskInTaskObjAtLocalStorage(task, tasksObj);
-    return resourcePromise(task);
+    return _setTaskInTaskObjAtLocalStorage(task, tasksObj);
+    // return resourcePromise(task);
   }
 
   function deleteTask(task) {
     var tasksObj = _getTasksObj();
     delete tasksObj[task._id];
-    localStorageService.set(_getUserTasksKey(), tasksObj);
-    return task;
+    return $localForage.setItem(_getUserTasksKey(), tasksObj);
+    // return task;
   }
 
   function listTasks(filters) {
-    var tasksObj = _getTasksObj();
-    var tasksFiltered = _.pickBy(tasksObj, _.identity(filters));
-    return resourcePromise(tasksFiltered);
+    return _getTasksObj().then(function (tasksObj) {
+      var tasksFiltered = _.pickBy(tasksObj, _.identity(filters));
+      return resourcePromise(tasksFiltered);
+    });
   }
 
   function synchronizeList(outterSrcList) {
     if (_.isArray(outterSrcList)) // map task._id as keys:
       outterSrcList = _.keyBy(outterSrcList, '_id');
-    localStorageService.set(_getUserTasksKey(), outterSrcList);
+    console.log('synchronizeList->prepromise');
+    return $localForage.setItem(_getUserTasksKey(), outterSrcList);
   }
 
   return {

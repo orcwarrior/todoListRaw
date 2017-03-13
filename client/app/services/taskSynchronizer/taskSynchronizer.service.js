@@ -50,6 +50,7 @@ function taskSynchronizerService(taskService, api, $q) {
   }
   function _postSyncTaskListRefresh() {
     return function (config) {
+      console.log("taskSync: _postSyncTaskListRefresh");
       if (!synchronizingTasks) {
         console.log("taskSync: forceSync: taskListrefresh(%s)...", config && config.refreshList);
         _checkTasksListRefresh(config);
@@ -60,7 +61,10 @@ function taskSynchronizerService(taskService, api, $q) {
     return function (unsynchronizedTasksList) {
       console.log("taskSync: unsychronized tasks: %s", unsynchronizedTasksList && unsynchronizedTasksList.length);
       var syncPromises = _.map(unsynchronizedTasksList, _syncSingleTask);
-      return $q.all(syncPromises);
+      return $q.all(syncPromises).then(function (all) {
+        console.log("taskSync: _tryToSynchronizeUnsyncTasks");
+          return all;
+      });
     }
   }
   function _syncSingleTask(unsyncTask) {
@@ -70,9 +74,10 @@ function taskSynchronizerService(taskService, api, $q) {
     return actionPromise;
   }
   function _allSyncsDone() {
+    console.log("taskSync: [begin] _allSyncsDone");
     return taskService.clearUnsynchronized()
       .then(function () {
-        console.log("taskSync: sync-actions done, resolving...");
+        console.log("taskSync: _allSyncsDone");
         synchronizingTasks = false;
         return true;
       })
@@ -88,8 +93,11 @@ function taskSynchronizerService(taskService, api, $q) {
     synchronizingTasks = true;
     promise = taskService.listUnsynchronized()
       .then(_tryToSynchronizeUnsyncTasks())
-      .then(_allSyncsDone())
-      .then(function () { return config; });
+      .then(_allSyncsDone)
+      .then(function (last) {
+        console.log("taskSync: !!! resolving final promise !!!");
+        console.log(last);
+        return config; });
     return promise;
   }
 

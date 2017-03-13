@@ -1,10 +1,10 @@
 'use strict';
 
-function taskUnsyncStorageLocalService(resourcePromise, taskStorageLocal, localStorageService) {
+function taskUnsyncStorageLocalService(resourcePromise, taskStorageLocal, $localForage) {
   const UNSYNC_ACTION = { CREATE: 'create', UPDATE: 'update', DELETE: 'delete' }
   function _getUserTasksKey() { return 'user.tasks'; }
   function _getTasksObj() {
-    return localStorageService.get(_getUserTasksKey()) || {};
+    return $localForage.getItem(_getUserTasksKey()) || {};
   }
   function _generateUnsyncId() {
     function s4() {
@@ -31,17 +31,20 @@ function taskUnsyncStorageLocalService(resourcePromise, taskStorageLocal, localS
     return taskStorageLocal.update(task);
   }
   function listUnsynchronizedTasks(filters) {
-    var tasksObj = _getTasksObj();
-    return resourcePromise(_.chain(tasksObj)
-      .pickBy(function (v) {return v._unsyncAction;})
-      .pickBy(_.identity(filters)).value());
+    return _getTasksObj().then(function (tasksObj) {
+      return _.chain(tasksObj)
+        .pickBy(function (v) {return v._unsyncAction;})
+        .pickBy(_.identity(filters)).value();
+    });
   }
   function clearUnsynchronizedEntries() {
-    var tasksObj = _getTasksObj();
-    var clearedTasksObj = _.pickBy(tasksObj, function (task) {
-      return !task._unsyncAction;
-    });
-    return taskStorageLocal.synchronizeList(clearedTasksObj);
+    return _getTasksObj()
+      .then(function (tasksObj) {
+        var clearedTasksObj = _.pickBy(tasksObj, function (task) {
+          return !task._unsyncAction;
+        });
+        return taskStorageLocal.synchronizeList(clearedTasksObj);
+      })
   }
   return {
     create: createUnsynchronizedTask,
