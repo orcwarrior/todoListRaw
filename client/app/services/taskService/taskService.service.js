@@ -6,7 +6,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
   function _pickTaskWithId(task1, task2) {
     return (task1._id) ? task1 : task2;
   }
-  function _commitToLocalStorage(task) {
+  function _commitToLocalStorage(task, method) {
     return function (dbTask) {
       var taskWithId = _pickTaskWithId(dbTask, task);
       return taskStorageLocal[method](taskWithId);
@@ -16,7 +16,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
   function _isInternetConnected(err) {
     return err && err.status !== -1;
   }
-  function _commitToUnsyncStorage(task) {
+  function _commitToUnsyncStorage(task, method) {
     return function rejection(err) {
       if (_isInternetConnected(err)) return $q.reject(err);
       else return taskUnsyncStorageLocal[method](task);
@@ -37,16 +37,21 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
 
   function serviceActionChainBuilder(method, task) {
     var promise = taskStorageDB[method](task)
-      .then(_commitToLocalStorage(task),
-     /*err*/ _commitToUnsyncStorage(task))
+      .then(_commitToLocalStorage(task, method),
+     /*err*/ _commitToUnsyncStorage(task, method))
       .then(_emitPostRequestEvent(method));
     return resourcePromise(promise);
+  }
+  function preprocessTask(task) {
+    task.deadlineTimeLocalized = moment(task.date).format('H:mm');
+    return task;
   }
 
   var evtEmitter = new EventEmitter();
   var service = _.extend(evtEmitter, {
     create: function (task) {
       return userService.getUser().then(function (user) {
+        task = preprocessTask(task);
         task._userId = user._id;
         return serviceActionChainBuilder('create', task);
       });
@@ -55,6 +60,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
       return serviceActionChainBuilder('read', taskId);
     },
     update: function (task) {
+      task = preprocessTask(task);
       return serviceActionChainBuilder('update', task);
     },
     delete: function (task) {
@@ -64,8 +70,8 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
       var localList,
         promiseChain = taskStorageLocal.list(filters)
           .then(function (localStorageList) {
-            localList = localStorageList;
-            return userService.getUser();
+           localList = localStorageList;
+           return userService.getUser();
           })
           .then(function (user) {
             return taskStorageDB.list(user._id, filters);
@@ -76,7 +82,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
             evtEmitter.emit('taskService:tasksReloaded', combinedUserTasks);
             evtEmitter.emit('taskService:successRequest');
             taskStorageLocal.synchronizeList(combinedUserTasks);
-            return combinedUserTasks;
+            return dbUserTasks; //combinedUserTasks;
           }, function rejection(err) {
             combinedUserTasks = localList;
             evtEmitter.emit('taskService:tasksReloaded', combinedUserTasks);
@@ -89,7 +95,7 @@ function taskService(taskStorageLocal, taskUnsyncStorageLocal, taskStorageDB, us
       return taskUnsyncStorageLocal.list(filters);
     },
     clearUnsynchronized: function () {
-      return $q.when(taskUnsyncStorageLocal.clearUnsynchronizedEntries());
+      return taskUnsyncStorageLocal.clearUnsynchronizedEntries();
     }
   });
   return service;
