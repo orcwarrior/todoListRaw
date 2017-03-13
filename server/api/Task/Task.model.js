@@ -6,10 +6,12 @@ var TaskSchema = new mongoose.Schema({
   _userId: {type: mongoose.Schema.ObjectId, ref: 'User'},
   name: String,
   description: String,
-  date: {type: Date, default: Date.now},
-  completed: Boolean,
+  date: {type: Date, default: Date.now, index: true},
+  completed: {type: Boolean, default: false},
   tags: [String],
-  notification: Boolean
+  notification: Boolean,
+  notified: Boolean,
+  deadlineTimeLocalized: String
 });
 
 import User from '../User/User.model'

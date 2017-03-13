@@ -1,37 +1,35 @@
 'use strict';
 
-function userServiceService(localStorageService, api, $q) {
+function userServiceService($localForage, api, $q) {
   var fetchedUser;
 
-  function fetchDBUser(localStorageUser) {
-    return api.user.get({userId: localStorageUser._id},
+  function fetchDBUser(userLocal) {
+    return api.user.get({userId: userLocal._id},
       function (dbUser) {
         fetchedUser = dbUser;
-        localStorageService.set('user', fetchedUser);
+        $localForage.setItem('user', dbUser);
         return fetchedUser;
-      });
+      }).$promise;
   }
   function createDBUser() {
     return api.user.save({name: 'u' + moment().format()},
       function (createdUser) {
         fetchedUser = createdUser;
-        localStorageService.set('user', createdUser);
+        $localForage.setItem('user', createdUser);
         return createdUser;
-      })
-  }
-  function getLocalStorageUser() {
-    return localStorageService.get('user');
+      }).$promise;
   }
 
   function getUser() {
     if (fetchedUser) return fetchedUser;
-    var localStorageUser = getLocalStorageUser();
-    if (localStorageUser) {
-      fetchedUser = fetchDBUser(localStorageUser);
-      return localStorageUser;
-    }
-    else
-      return createDBUser();
+    return $localForage.getItem('user').then(function (userLocal) {
+      if (userLocal) {
+        fetchedUser = fetchDBUser(userLocal);
+        return userLocal;//
+      }
+      else
+        return createDBUser();
+    })
   }
 
   return {

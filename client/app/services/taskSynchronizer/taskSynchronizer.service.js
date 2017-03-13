@@ -1,34 +1,46 @@
 'use strict';
 
 function taskSynchronizerService(taskService, api, $q) {
-  var prevRequestFailed, synchronizingTasks;
+  var prevRequestFailed, synchronizingTasks, forcingSynchronize;
+  var service = {
+    synchronize: trySynchronize,
+    isDesynchronized: function () { return prevRequestFailed; }
+  };
+  function trySynchronize(lookupInLSOnError) {
+    return api.ping.get().$promise
+      .then(function fulfilment() {
+        _forceSynchronization();
+      })
+      .catch(function (err) {
+        if (lookupInLSOnError) {
+          console.warn("LS:Synch error: %s; serve atleast LS.", err);
+          taskService.list();
+        }
+        return err;
+      });
+  }
 
   function init() {
-    taskService.on('taskService:errorRequest', function (config) {
+    taskService.on('taskService:errorRequest', function (config, err) {
+      console.log("taskSync: handle: taskService:errorRequest");
       prevRequestFailed = true;
       _checkTasksListRefresh(config);
     });
     taskService.on('taskService:successRequest', function (config) {
+      console.log("taskSync: handle: taskService:successRequest -> runsync");
       runSynchronization(config)
-        .then(function () {
-          if (!synchronizingTasks) {
-            _checkTasksListRefresh(config);
-          }
-        });
-      prevRequestFailed = false;
-    })
-    _forceSynchronization();
-  } init();
+        .then(_postSyncTaskListRefresh())
+    });
+    service.synchronize(true); // to commit unsync tasks and fetch tasks list at the init.
+  }
+  init();
 
   function _forceSynchronization() {
-    prevRequestFailed = true;
+    console.log("taskSync: forceSync: init");
+    forcingSynchronize = true;
     runSynchronization({refreshList: true})
-      .then(function () {
-        if (!synchronizingTasks) {
-          _checkTasksListRefresh({refreshList: true});
-        }
-      });
-    prevRequestFailed = false;
+      .then(_postSyncTaskListRefresh());
+    forcingSynchronize = false;
   }
 
   function _checkTasksListRefresh(config) {
@@ -36,40 +48,60 @@ function taskSynchronizerService(taskService, api, $q) {
       taskService.list();
     }
   }
+  function _postSyncTaskListRefresh() {
+    return function (config) {
+      console.log("taskSync: _postSyncTaskListRefresh");
+      if (!synchronizingTasks) {
+        console.log("taskSync: forceSync: taskListrefresh(%s)...", config && config.refreshList);
+        _checkTasksListRefresh(config);
+      }
+    }
+  }
+  function _tryToSynchronizeUnsyncTasks() {
+    return function (unsynchronizedTasksList) {
+      console.log("taskSync: unsychronized tasks: %s", unsynchronizedTasksList && unsynchronizedTasksList.length);
+      var syncPromises = _.map(unsynchronizedTasksList, _syncSingleTask);
+      return $q.all(syncPromises).then(function (all) {
+        console.log("taskSync: _tryToSynchronizeUnsyncTasks");
+          return all;
+      });
+    }
+  }
+  function _syncSingleTask(unsyncTask) {
+    var action = unsyncTask._unsyncAction;
+    var actionPromise = taskService[action](unsyncTask);
+    console.log("taskSync: re-doing action: %s (%s)", action, unsyncTask._id);
+    return actionPromise;
+  }
+  function _allSyncsDone() {
+    console.log("taskSync: [begin] _allSyncsDone");
+    return taskService.clearUnsynchronized()
+      .then(function () {
+        console.log("taskSync: _allSyncsDone");
+        synchronizingTasks = false;
+        return true;
+      })
+  }
 
   function runSynchronization(config) {
-    if (!prevRequestFailed || synchronizingTasks)
-      return $q.resolve(); // break from sync
+    if ((!prevRequestFailed || synchronizingTasks) && !forcingSynchronize) {
+      console.log("taskSync: !prevRequestFailed || synchronizingTasks: true (and no forcingSynchronize); breaking!");
+      return $q.resolve(config); // break from sync
+    }
 
-    var deffered = $q.defer();
+    var promise = $q.defer();
     synchronizingTasks = true;
-    taskService.listUnsynchronized()
-      .then(function (unsynchronizedTasksList) {
-        var synchronizationActions = [];
-        _.each(unsynchronizedTasksList, function (unsyncTask) {
-          var action = unsyncTask._unsyncAction;
-          synchronizationActions.push(taskService[action](unsyncTask));
-        })
-        $q.all(synchronizationActions).then(function () {
-          taskService.clearUnsynchronized()
-            .then(function () {
-              synchronizingTasks = false;
-              deffered.resolve();
-            })
-        });
-      })
-    return deffered.promise;
+    promise = taskService.listUnsynchronized()
+      .then(_tryToSynchronizeUnsyncTasks())
+      .then(_allSyncsDone)
+      .then(function (last) {
+        console.log("taskSync: !!! resolving final promise !!!");
+        console.log(last);
+        return config; });
+    return promise;
   }
 
-  return {
-    synchronize: function () {
-      return api.ping.get().$promise
-        .then(function fulfilment() {
-          _forceSynchronization();
-        });
-    },
-    isDesynchronized: function () { return prevRequestFailed; }
-  }
+  return service;
 }
 angular.module('todoListApp')
   .service('taskSynchronizer', taskSynchronizerService);

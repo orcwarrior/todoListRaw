@@ -2,7 +2,7 @@
             col-sm-10 col-sm-offset-1
             col-md-8 col-md-offset-2
             col-lg-6 col-lg-offset-3"
-    ng-class="{'unsync' : isUnsyncTask()}">
+     ng-class="{'unsync' : isUnsyncTask()}">
   <div class="col-xs-2 col-sm-1 wrapper-task-done-btn">
     <button type="button" class="btn btn-default" ng-click="toggleTaskDone()">
     <span class="task-done-icon glyphicon"
@@ -28,9 +28,9 @@
     <span class="glyphicon task-icon-small"
           ng-click="toggleNotification()"
           ng-class="{'glyphicon-bell' : task.notification,
-          'glyphicon-ban-circle': !task.notification}"/>
+          'glyphicon-ban-circle': !task.notification}"> </span>
       <span class="glyphicon glyphicon-trash task-icon-small"
-            ng-click="removeTask()"/>
+            ng-click="removeTask()"></span>
     </div>
   </div>
 </div>
