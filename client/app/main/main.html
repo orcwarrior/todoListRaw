@@ -1,17 +1,40 @@
 <div class="container" ng-controller="MainController as todo">
+  <!-- tabs -->
+  <uib-tabset class="main-grid main-tabs">
+    <uib-tab index="0" heading="Wszystkie" select="todo.setTab('all')"></uib-tab>
+    <uib-tab index="1" heading="Do zrobienia" select="todo.setTab('todo')"></uib-tab>
+    <uib-tab index="2" heading="Wykonane" select="todo.setTab('done')"></uib-tab>
+  </uib-tabset>
+  <!-- offline -->
   <div class="row" ng-show="todo.synchronizer.isDesynchronized()">
-    <div class="alert alert-warning col-xs-12
-    col-md-8 col-md-offset-2" role="alert">
+    <div class="alert alert-warning main-grid" role="alert">
       Aplikacja jest w trybie offline, wszystkie zmiany będą zsynchronizowane po przywróceniu połączenia internetowego.
       <a href="#" class="alert-link" ng-click="todo.synchronizer.synchronize()">(Spróbuj zsynchronizować)</a>
     </div>
   </div>
-
-    <div ng-repeat="task in todo.userTasks">
-      <todo-task task="task" class="row row-tasks-no-padding"></todo-task>
-      <hr id='currentTime' class="col-xs-12 col-md-offset-2 col-md-8 padding-0"
-          ng-if="todo.currentTimeBetween(task, todo.userTasks[$index+1])" />
+  <!-- no user tasks -->
+  <div class="no-tasks-info main-grid-small"
+       ng-show="!todo.userTasks.length && !todo._tasksLoading">
+    <span class="glyphicon glyphicon-plus-sign no-tasks-icon"></span>
+    <div class="no-tasks-captions">
+      <h2>Nie znaleziono żadnych zadań.</h2>
+      <em>Utworz swoje pierwsze zadanie w aplikacji albo zmień filtr :)</em>
     </div>
+  </div>
+
+  <!-- loading tasks -->
+  <div class="main-grid-small" ng-show="todo._tasksLoading">
+    <div class="progress progress-striped primary">
+      <div class="progress-bar" role="progressbar" style="width: 100%">
+      </div>
+    </div>
+  </div>
+
+  <div ng-repeat="task in todo.filteredTasks" class="tasks-wrapper">
+    <todo-task task="task" class="row row-tasks-no-padding"></todo-task>
+    <hr id='currentTime' class="main-grid padding-0"
+        ng-if="todo.currentTimeBetween(task, todo.filteredTasks[$index+1])"/>
+  </div>
   <div class="row">
     <todo-task-form/>
   </div>
