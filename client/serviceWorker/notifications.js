@@ -35,4 +35,4 @@ notifyEvt.notificationclick = function (event) {
   }
 }
 
-events.notifyEvt = notifyEvt;
+events.notify = notifyEvt;

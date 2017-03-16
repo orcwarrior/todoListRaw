@@ -4,17 +4,25 @@
 
 var CACHE_NAME = "todoapp-cache-v1";
 var cacheEvts = {};
-var precacheFiles = [
+var precacheFiles =
+[
   '/',
   'manifest.webmanifest',
   'sw.js',
   '/serviceWorker/generic.js',
   '/serviceWorker/cache.js',
+  '/serviceWorker/notifications.js',
+  '/serviceWorker/store.js',
 ];
+function createSync() {
+  var serviceWorkerRegistration = self.registration;
+  console.log('Register testSync...');
+  return serviceWorkerRegistration.sync.register('testSync');
 
+}
 cacheEvts.activate = function (event) {
   console.log("SW: Activated!");
-  event.waitUntil(cache_preCache().then(function () {
+  event.waitUntil(cache_preCache().then(createSync).then(function () {
     return self.clients.claim();
   }));
 };
@@ -32,13 +40,16 @@ Promise.resolveFulfilled = function (promise) {
         resolve(fulfilment);
       }
     });
-  }, function (reject) { });
+  }, function (reject) {
+  });
 };
 
 cacheEvts.fetch = function (event) {
   const url = new URL(event.request.url);
   const filename = cache_getFilenameFromRequest(event.request);
+  console.info("[%s] fetch... ", event.request.url);
   if (cache_isCacheableUrl(url)) {
+    console.info("[%s] isCacheable ", filename);
     var cached = Promise.resolveFulfilled(cache_getFromCache(event.request));
     var fetched = Promise.resolveFulfilled(cache_fetchAndCache(event.request));
     var both = Promise.all([fetched, cached]);
@@ -55,7 +66,7 @@ function cache_getFromCache(request) {
     return cache.match(request);
   }).then(function (matching) {
     if (matching) {
-      // console.info("[%s]1. Cache matching: " + matching, filename);
+       console.info("[%s]1. Cache matching: " + matching, filename);
       return matching;
     } // Elsewhere, don't resolve so Race will wait for fetch.
   })
@@ -92,7 +103,7 @@ function cache_fetchAndCache(request) {
 
 // Dynamic caching pattern matcher:
 var cache_matcherConfig = {
-  allow: ['\.*.html', '\.*.css', '\.*.js', '\.*.woff', '\.*.ttf', '\/assets\/.*'],
+  allow: ['^\/$', '\.*.html', '\.*.css', '\.*.js', '\.*.woff', '\.*.ttf', '\/assets\/.*'],
   deny: ['^\/api\/.*',]
 }
 
