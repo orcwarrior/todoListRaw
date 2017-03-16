@@ -1,5 +1,5 @@
 'use strict';
-
+/*
 function taskSynchronizerService(taskService, api, $q) {
   var prevRequestFailed, synchronizingTasks, forcingSynchronize;
   var service = {
@@ -105,3 +105,4 @@ function taskSynchronizerService(taskService, api, $q) {
 }
 angular.module('todoListApp')
   .service('taskSynchronizer', taskSynchronizerService);
+*/
